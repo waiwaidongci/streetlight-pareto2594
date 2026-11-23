@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from src.config.database import connection
 from src.constants.enums import Role
 from src.controllers.auth import allow, current
+from src.domain.demo import demo_rows, segment_rows
 from src.domain.spec import SPEC
 from src.models.identity import User
 from src.models.source import Dataset
@@ -23,9 +24,13 @@ def spec():
 
 
 @router.get('/template')
-def sample(actor: User = Depends(current)):
-    filename = quote(SPEC['sample_name'])
-    return Response(template(), media_type='text/csv; charset=utf-8',
+def sample(name: str = '', actor: User = Depends(current)):
+    if name == SPEC['segment']['short_name']:
+        rows = segment_rows()
+    else:
+        rows = demo_rows()
+    filename = quote(SPEC['segment']['sample_name'] if name == SPEC['segment']['short_name'] else SPEC['sample_name'])
+    return Response(template(rows), media_type='text/csv; charset=utf-8',
                     headers={'Content-Disposition': f"attachment; filename*=UTF-8''{filename}"})
 
 

@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, date
+from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 from src.constants.enums import Review
 
@@ -18,11 +19,16 @@ class RunRequest(Request):
     dataset_id: int = Field(gt=0)
     name: str = Field(min_length=1, max_length=120)
     params: dict = Field(default_factory=dict)
+    kind: Literal['pareto', 'segment'] = 'pareto'
 
 class ReviewRequest(Request):
     review: Review
     note: str = Field(min_length=1, max_length=500)
     decision: str = Field(default='', max_length=120)
+
+class HandoverRequest(Request):
+    cut_date: date
+    note: str = Field(default='', max_length=500)
 
 class ScheduleRequest(RunRequest):
     recipient: str = Field(min_length=1, max_length=100)

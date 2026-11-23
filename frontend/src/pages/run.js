@@ -28,7 +28,7 @@ export async function runPage(route, refresh) {
     el('label',{class:'check'},el('input',{name:'repeat_daily',type:'checkbox'}),'每日同一时间运行'), plan);
   const form = el('form',{class:'fields','data-testid':'run-form',
     onSubmit:handler(submit,error,async event=>{
-      const item = await workspace.start(runRequest(new FormData(event.target),spec));
+      const item = await workspace.start({...runRequest(new FormData(event.target),spec),kind:'pareto'});
       location.hash = `#results/${item.id}`;
     })}, datasetField(datasets,route.id),field({key:'name',label:'运行名称',type:'string',max_length:120},`样本${spec.run}`),
     el('div',{class:'form-grid'},spec.params.map(param=>field(param))),el('div',{class:'actions'},submit),scheduleFields,error);
@@ -41,7 +41,7 @@ export async function runPage(route, refresh) {
     await refresh();
   }));
   const runList = table([
-    {label:'运行',render:item=>link(item.name,`#results/${item.id}`)},
+    {label:'运行',render:item=>link(item.name,item.kind==='segment'?`#segments/${item.id}`:`#results/${item.id}`)},
     {label:'状态',render:item=>pill(STATUS[item.status],item.status)},
     {label:'时间',render:item=>date(item.created_at)},
   ],runs,{caption:'运行记录',empty:'首次运行后将在此显示后台状态。'});

@@ -10,12 +10,17 @@ import {date, value} from '../utils/format.js';
 
 export async function results(route, refresh) {
   const {spec,runs,datasets} = workspace;
-  const id = route.id || runs[0]?.id;
+  const pareto = runs.filter(item => item.kind !== 'segment');
+  const id = route.id || pareto[0]?.id;
   if (!id) return panel(spec.pages[3],empty('还没有可查看的运行结果。','#run','前往运行'));
   const job = await workspace.getRun(id);
+  if (job.kind === 'segment') {
+    location.replace(`#segments/${job.id}`);
+    return panel(job.name, p('已转至格局分段结果…'));
+  }
   const source = datasets.find(item => item.id === job.dataset_id);
   const message = feedback();
-  const finished = item => item.status === 'complete' || item.status === 'failed';
+  const finished = item => item.status === 'complete' || item.status === 'failed' || item.status === 'superseded';
   if (!finished(job)) {
     const original = location.hash;
     const status = el('p',{role:'status'},'后台正在计算，完成后会自动展示。');

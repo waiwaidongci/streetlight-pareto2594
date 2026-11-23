@@ -6,7 +6,7 @@ from src.config.database import connection
 from src.constants.enums import Role
 from src.controllers.auth import allow, current
 from src.models.identity import User
-from src.models.jobs import Delivery, Schedule
+from src.models.jobs import Delivery, Run, Schedule
 from src.models.source import Dataset
 from src.schemas.requests import ScheduleRequest
 from src.services.audit import record
@@ -57,4 +57,6 @@ def disable(schedule_id: int, db: Session = Depends(connection), actor: User = D
 
 @router.get('/deliveries')
 def outbox(db: Session = Depends(connection), actor: User = Depends(current)):
-    return [views.delivery(item) for item in db.scalars(select(Delivery).order_by(Delivery.id.desc()).limit(100))]
+    runs = {item.id: item for item in db.scalars(select(Run).where(Run.id.in_(select(Delivery.run_id))))}
+    return [{**views.delivery(item), 'kind': runs[item.run_id].kind if item.run_id in runs else 'pareto'}
+            for item in db.scalars(select(Delivery).order_by(Delivery.id.desc()).limit(100))]

@@ -27,8 +27,11 @@ class Run(Base):
     schedule_id: Mapped[int | None] = mapped_column(ForeignKey('schedules.id'))
     scheduled_at: Mapped[datetime | None]
     name: Mapped[str] = mapped_column(String(120))
+    kind: Mapped[str] = mapped_column(String(20), default='pareto')
     status: Mapped[str] = mapped_column(String(20), default=Status.QUEUED, index=True)
     params: Mapped[dict] = mapped_column(JSON)
+    snapshot: Mapped[dict | None] = mapped_column(JSON)
+    checkpoint: Mapped[dict | None] = mapped_column(JSON)
     result: Mapped[dict | None] = mapped_column(JSON)
     error: Mapped[str | None] = mapped_column(String(500))
     export_file: Mapped[str | None] = mapped_column(String(100))
@@ -37,9 +40,24 @@ class Run(Base):
     decision: Mapped[str | None] = mapped_column(String(120))
     attempt: Mapped[int] = mapped_column(default=0)
     lease_until: Mapped[datetime | None]
+    superseded_at: Mapped[datetime | None]
     author: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(default=now)
     finished_at: Mapped[datetime | None]
+
+
+class Handover(Base):
+    """已交班的切点，后续重算固定保留，不能再挪。"""
+    __tablename__ = 'handovers'
+    __table_args__ = (UniqueConstraint('district', 'cut_date'),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[int] = mapped_column(ForeignKey('runs.id'))
+    district: Mapped[str] = mapped_column(String(100), default='')
+    cut_date: Mapped[str] = mapped_column(String(10))
+    note: Mapped[str | None] = mapped_column(String(500))
+    actor: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(default=now)
 
 class Delivery(Base):
     __tablename__ = 'deliveries'

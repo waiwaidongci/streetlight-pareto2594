@@ -10,6 +10,7 @@ class Status(StrEnum):
     RUNNING = 'running'
     COMPLETE = 'complete'
     FAILED = 'failed'
+    SUPERSEDED = 'superseded'
 
 class Review(StrEnum):
     PENDING = 'pending'

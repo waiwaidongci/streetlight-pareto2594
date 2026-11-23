@@ -27,13 +27,15 @@ export async function reviewPage(route, refresh) {
   const id = route.id || completed[0]?.id;
   if (!id) return panel(spec.pages[4], empty('先完成一次运行，再复核结果。','#run',spec.pages[2]));
   const job = await workspace.getRun(id);
-  if (!job.result) return panel(job.name, empty('当前运行没有可复核结果。',`#results/${job.id}`,'查看运行状态'));
+  const evidence = job.kind === 'segment' ? `#segments/${id}` : `#results/${id}`;
+  const mode = job.kind === 'segment' ? {...spec, action:'提交分段复核', decision:spec.segment.decision, modes:spec.segment.modes} : spec;
+  if (!job.result) return panel(job.name, empty('当前运行没有可复核结果。', evidence, '查看运行状态'));
   return el('div', {class:'two-col'},
     panel(job.name, p(job.result.headline,'intro-copy'), p(job.result.note),
-      link('查看计算证据',`#results/${id}`,{class:'quiet'}),
+      link('查看计算证据', evidence, {class:'quiet'}),
       pill(REVIEW[job.review],job.review),
       job.review_note && el('div',{class:'decision'},p(job.decision),p(job.review_note)),
-      job.review === 'pending' && (session.canReview ? reviewForm(job,spec,refresh) : p('等待业务负责人复核。','subtle'))),
+      job.review === 'pending' && (session.canReview ? reviewForm(job,mode,refresh) : p('等待业务负责人复核。','subtle'))),
     panel('可复核记录', el('ul',{class:'method-list'}, completed.map(run =>
       el('li',{}, link(run.name,`#review/${run.id}`), ' ', pill(REVIEW[run.review],run.review))))));
 }

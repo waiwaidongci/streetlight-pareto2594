@@ -34,11 +34,11 @@ def save(db, name, filename, rows, actor):
     return dataset, True
 
 
-def template():
+def template(rows=None):
     fields = [field['key'] for field in SPEC['fields']]
     buffer = io.StringIO(newline='')
     writer = csv.DictWriter(buffer, fieldnames=fields, extrasaction='ignore')
     writer.writeheader()
     # The complete representative dataset also works as a reproducible import fixture.
-    writer.writerows(demo_rows())
+    writer.writerows(rows if rows is not None else demo_rows())
     return '\ufeff' + buffer.getvalue()

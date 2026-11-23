@@ -77,3 +77,20 @@ def normalize_params(params):
     if set(params) - {field['key'] for field in fields}:
         raise ValueError('存在未知运行参数，请重新打开工作面板')
     return {field['key']: cell(field, params.get(field['key'], field['default'])) for field in fields}
+
+
+def normalize_segment_params(params):
+    fields = SPEC['segment']['params']
+    if set(params) - {field['key'] for field in fields}:
+        raise ValueError('存在未知运行参数，请重新打开工作面板')
+    normalized = {field['key']: cell(field, params.get(field['key'], field['default'])) for field in fields}
+    normalized['district_scope'] = normalized['district_scope'] or ''
+    start, end = date.fromisoformat(normalized['start_date']), date.fromisoformat(normalized['end_date'])
+    if start > end:
+        raise ValueError('统计起日须早于或等于统计止日。')
+    days = (end - start).days + 1
+    if days < SPEC['segment']['min_days']:
+        raise ValueError(f'所选日期只有 {days} 天，不足 {SPEC["segment"]["min_days"]} 天，无法分段。')
+    if days > SPEC['segment']['max_days']:
+        raise ValueError(f'所选日期最多 {SPEC["segment"]["max_days"]} 天。')
+    return normalized
